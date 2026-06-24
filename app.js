@@ -3,11 +3,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import {
   getFirestore,
   collection,
-  addDoc
+  addDoc,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+// ================== Firebase Config ==================
 const firebaseConfig = {
-  apiKey: "AIzaSyCVJclfpEp9Jo9879C3RfZKiEdBUibwrxI",
+  apiKey: "AIzaSyCVJclfpEp9Jo9879C3RfZKiEdBUibwrx",
   authDomain: "ahmad-662ee.firebaseapp.com",
   projectId: "ahmad-662ee",
   storageBucket: "ahmad-662ee.firebasestorage.app",
@@ -16,46 +19,64 @@ const firebaseConfig = {
   measurementId: "G-WY2R1ZJDPB"
 };
 
+// ================== Init ==================
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.send = async function(){
+// ================== Get Rate from Firebase ==================
+async function getRate() {
+  try {
+    const ref = doc(db, "settings", "rates");
+    const snap = await getDoc(ref);
 
-let usd = Number(document.getElementById("usd").value);
-
-if(!usd){
-alert("أدخل المبلغ");
-return;
+    if (snap.exists()) {
+      return snap.data().SYP || 14200;
+    } else {
+      return 14200; // fallback
+    }
+  } catch (e) {
+    console.log("Rate error:", e);
+    return 14200;
+  }
 }
 
-let rate = 14200;
+// ================== Send Request ==================
+window.send = async function () {
 
-let fee = usd * 0.01;
+  let usd = Number(document.getElementById("usd").value);
+  let name = document.getElementById("name")?.value || "";
+  let whatsapp = document.getElementById("whatsapp")?.value || "";
 
-let net = usd - fee;
+  if (!usd || usd <= 0) {
+    alert("أدخل المبلغ بشكل صحيح");
+    return;
+  }
 
-let syp = net * rate;
+  // 💱 جلب السعر من Firebase
+  let rate = await getRate();
 
-try{
+  // 💰 حسابات
+  let fee = usd * 0.01;
+  let net = usd - fee;
+  let syp = net * rate;
 
-await addDoc(
-collection(db,"requests"),
-{
-usd: usd,
-fee: fee,
-syp: syp,
-status: "pending",
-date: new Date().toISOString()
-}
-);
+  try {
 
-document.getElementById("msg").innerHTML =
-"✅ تم إرسال الطلب بنجاح";
+    await addDoc(collection(db, "requests"), {
+      usd: usd,
+      fee: fee,
+      syp: syp,
+      rate: rate,
+      name: name,
+      whatsapp: whatsapp,
+      status: "pending",
+      date: new Date().toISOString()
+    });
 
-}catch(error){
+    document.getElementById("msg").innerHTML =
+      "✅ تم إرسال الطلب بنجاح";
 
-alert(error.message);
-
-}
-
-}
+  } catch (error) {
+    alert(error.message);
+  }
+};
