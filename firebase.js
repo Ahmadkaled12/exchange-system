@@ -1,14 +1,30 @@
-// firebase.js
+// firebase.js (Firestore Only - Correct Version)
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+import {
+  getAuth
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "YOUR_DB_URL",
-  projectId: "YOUR_PROJECT"
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-firebase.initializeApp(firebaseConfig);
+// Initialize App
+const app = initializeApp(firebaseConfig);
 
-// خدمات جاهزة للاستخدام في كل المشروع
-const auth = firebase.auth();
-const db = firebase.database();
+// Services
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Export for use in other files
+export { db, auth };
