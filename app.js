@@ -1,34 +1,61 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
-// 1) إعداد Firebase (نملأه بعد قليل)
+import {
+  getFirestore,
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
 const firebaseConfig = {
-  apiKey: "PUT_KEY",
-  authDomain: "PUT_DOMAIN",
-  projectId: "PUT_ID",
-  storageBucket: "PUT_BUCKET",
-  messagingSenderId: "PUT_ID",
-  appId: "PUT_APP"
+  apiKey: "AIzaSyCVJclfpEp9Jo9879C3RfZKiEdBUibwrxI",
+  authDomain: "ahmad-662ee.firebaseapp.com",
+  projectId: "ahmad-662ee",
+  storageBucket: "ahmad-662ee.firebasestorage.app",
+  messagingSenderId: "740891153734",
+  appId: "1:740891153734:web:58db6d1f6a6b57da618147",
+  measurementId: "G-WY2R1ZJDPB"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// 2) تحويل الأموال
-function send(){
+window.send = async function(){
 
 let usd = Number(document.getElementById("usd").value);
 
-let rate = 13500;
-let fee = usd * 0.05;
+if(!usd){
+alert("أدخل المبلغ");
+return;
+}
+
+let rate = 14200;
+
+let fee = usd * 0.01;
+
 let net = usd - fee;
+
 let syp = net * rate;
 
-db.collection("requests").add({
-usd,
-fee,
-syp,
-date: new Date().toLocaleString()
-});
+try{
+
+await addDoc(
+collection(db,"requests"),
+{
+usd: usd,
+fee: fee,
+syp: syp,
+status: "pending",
+date: new Date().toISOString()
+}
+);
 
 document.getElementById("msg").innerHTML =
-"تم إرسال الطلب ✔️";
+"✅ تم إرسال الطلب بنجاح";
+
+}catch(error){
+
+alert(error.message);
+
+}
+
 }
