@@ -1,30 +1,26 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
 <head>
-  auth.onAuthStateChanged((user) => {
-  if (!user) {
-    window.location.href = "login.html";
-  }
-});
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة إدارة الطلبات</title><style>
+<title>لوحة إدارة الطلبات</title>
+
+<style>
 body{
-font-family:Arial,sans-serif;
+font-family:Arial;
 background:#0f172a;
 color:white;
 padding:20px;
 margin:0;
 }
 
-h2{
-text-align:center;
-margin-bottom:20px;
-}
+h2{text-align:center;}
 
 .counter{
 text-align:center;
+margin:15px;
 font-size:18px;
-margin-bottom:20px;
 }
 
 .card{
@@ -34,49 +30,37 @@ margin-bottom:15px;
 border-radius:10px;
 }
 
-.pending{
-color:orange;
-font-weight:bold;
-}
-
-.approved{
-color:#22c55e;
-font-weight:bold;
-}
-
-.rejected{
-color:#ef4444;
-font-weight:bold;
-}
-
-.buttons{
-margin-top:10px;
-}
+.pending{color:orange;font-weight:bold;}
+.approved{color:#22c55e;font-weight:bold;}
+.rejected{color:#ef4444;font-weight:bold;}
 
 button{
 border:none;
-padding:10px;
+padding:8px 10px;
 margin:3px;
 border-radius:6px;
 cursor:pointer;
 color:white;
 }
 
-.approve{
-background:#22c55e;
-}
+.approve{background:#22c55e;}
+.reject{background:#ef4444;}
+.delete{background:#64748b;}
+</style>
+</head>
 
-.reject{
-background:#ef4444;
-}
+<body>
 
-.delete{
-background:#64748b;
-}
-</style></head>
-<body><h2>لوحة إدارة الطلبات</h2><div class="counter">
+<h2>📊 لوحة إدارة الطلبات</h2>
+
+<div class="counter">
 عدد الطلبات: <span id="count">0</span>
-</div><div id="orders"></div><script type="module">
+</div>
+
+<div id="orders"></div>
+
+<!-- Firebase -->
+<script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
@@ -89,8 +73,13 @@ updateDoc,
 deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+import {
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
 const firebaseConfig = {
-apiKey: "AIzaSyCVJclfpEp9Jo9879C3RfZKiEdBUibwrxI",
+apiKey: "AIzaSyCVJclfpEp9Jo9879C3RfZKiEdBUibwrx",
 authDomain: "ahmad-662ee.firebaseapp.com",
 projectId: "ahmad-662ee",
 storageBucket: "ahmad-662ee.firebasestorage.app",
@@ -100,86 +89,68 @@ appId: "1:740891153734:web:58db6d1f6a6b57da618147"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-window.approveOrder = async (id)=>{
-await updateDoc(doc(db,"requests",id),{
-status:"approved"
-});
-};
 
-window.rejectOrder = async (id)=>{
-await updateDoc(doc(db,"requests",id),{
-status:"rejected"
-});
-};
-
-window.deleteOrder = async (id)=>{
-if(confirm("هل تريد حذف الطلب؟")){
-await deleteDoc(doc(db,"requests",id));
+// 🔐 حماية الصفحة
+onAuthStateChanged(auth, (user) => {
+if (!user) {
+window.location.href = "login.html";
 }
-};
+});
 
+
+// 📡 جلب الطلبات مباشرة
 const ordersDiv = document.getElementById("orders");
 
-onSnapshot(collection(db,"requests"),(snapshot)=>{
+onSnapshot(collection(db, "requests"), (snapshot) => {
 
 ordersDiv.innerHTML = "";
 
 document.getElementById("count").innerText = snapshot.size;
 
-snapshot.forEach((item)=>{
-
-const data = item.data();
-const id = item.id;
-
-let statusClass = "pending";
-
-if(data.status === "approved"){
-statusClass = "approved";
-}
-
-if(data.status === "rejected"){
-statusClass = "rejected";
-}
+snapshot.forEach((docSnap) => {
+const data = docSnap.data();
+const id = docSnap.id;
 
 ordersDiv.innerHTML += `
 <div class="card">
+<p>💰 USD: ${data.usd}</p>
+<p>💵 SYP: ${data.syp}</p>
+<p>📊 الحالة: <span class="${data.status}">${data.status}</span></p>
 
-<p>💵 الدولار: ${data.usd}</p>
+<p>👤 الاسم: ${data.name || "-"}</p>
+<p>📱 واتساب: ${data.whatsapp || "-"}</p>
 
-<p>💰 الليرة: ${Math.round(data.syp)}</p>
-
-<p>📉 العمولة: ${data.fee}</p>
-
-<p class="${statusClass}">
-الحالة: ${data.status}
-</p>
-
-<div class="buttons">
-
-<button class="approve"
-onclick="approveOrder('${id}')">
-✅ قبول
-</button>
-
-<button class="reject"
-onclick="rejectOrder('${id}')">
-❌ رفض
-</button>
-
-<button class="delete"
-onclick="deleteOrder('${id}')">
-🗑 حذف
-</button>
-
-</div>
-
+<button class="approve" onclick="approveOrder('${id}')">قبول</button>
+<button class="reject" onclick="rejectOrder('${id}')">رفض</button>
+<button class="delete" onclick="deleteOrder('${id}')">حذف</button>
 </div>
 `;
-
+});
 });
 
-});
 
-</script></body>
+// ✅ قبول
+window.approveOrder = async (id) => {
+await updateDoc(doc(db,"requests",id),{
+status:"approved"
+});
+};
+
+// ❌ رفض
+window.rejectOrder = async (id) => {
+await updateDoc(doc(db,"requests",id),{
+status:"rejected"
+});
+};
+
+// 🗑 حذف
+window.deleteOrder = async (id) => {
+await deleteDoc(doc(db,"requests",id));
+};
+
+</script>
+
+</body>
 </html>
