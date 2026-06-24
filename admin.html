@@ -1,1 +1,77 @@
 
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الأدمن</title><style>
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:10px;
+border-radius:10px;
+}
+
+h2{
+text-align:center;
+}
+
+.status{
+color:#22c55e;
+font-weight:bold;
+}
+</style></head>
+<body><h2>لوحة إدارة الطلبات</h2><div id="orders"></div><script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCVJclfpEp9Jo9879C3RfZKiEdBUibwrxI",
+authDomain: "ahmad-662ee.firebaseapp.com",
+projectId: "ahmad-662ee",
+storageBucket: "ahmad-662ee.firebasestorage.app",
+messagingSenderId: "740891153734",
+appId: "1:740891153734:web:58db6d1f6a6b57da618147"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const ordersDiv = document.getElementById("orders");
+
+onSnapshot(collection(db,"requests"),(snapshot)=>{
+
+ordersDiv.innerHTML="";
+
+snapshot.forEach((doc)=>{
+
+const data = doc.data();
+
+ordersDiv.innerHTML += `
+<div class="card">
+<p>💵 الدولار: ${data.usd}</p>
+<p>💰 الليرة: ${Math.round(data.syp)}</p>
+<p>📉 العمولة: ${data.fee}</p>
+<p class="status">الحالة: ${data.status}</p>
+</div>
+`;
+
+});
+
+});
+
+</script></body>
+</html>
